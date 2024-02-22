@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="model" default="$(find steer_bot_description)/urdf/steer_bot.urdf.xacro"/>
+    <!-- Load the robot description -->
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+    
+    <!-- Gazebo  -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <!-- <arg name="world_name" default="$(arg world_name)"/> -->
+        <arg name="world_name" default="$(find Autonomous_Systems_Project_Simulation_Package_Team_18)/worlds/Intersection_Track.world"/>
+    </include>
+
+    <!-- Robot 1 -->
+    <group ns="robot1">
+        <include file="$(find Autonomous_Systems_Project_Simulation_Package_Team_18)/launch/test_1.launch">
+            <!-- <arg name="namespace" value="/steerbot1" />  -->
+            <arg name="robot_name" value="Robot1"/>
+            <arg name="namespace" value="/steer_bot1" />
+            <arg name="x" value="-10.0"/>
+            <arg name="y" value="0.0"/>
+            <arg name="yaw" value="0.0"/>
+        </include>
+    </group>
+
+    <!-- Robot 2 -->
+    <group ns="robot2">
+        <include file="$(find Autonomous_Systems_Project_Simulation_Package_Team_18)/launch/test_1.launch">
+            <!-- <arg name="namespace" value="/steerbot2" />  -->
+            <arg name="robot_name" value="Robot2"/>
+            <arg name="namespace" value="/steer_bot2" />
+            <arg name="x" value="0.0"/>
+            <arg name="y" value="-10.0"/>
+            <arg name="yaw" value="0.0"/>
+        </include>
+    </group>
+
+</launch>

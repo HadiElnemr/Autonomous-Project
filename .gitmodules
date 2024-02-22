@@ -1,0 +1,6 @@
+[submodule "steer_bot"]
+	path = steer_bot
+	url = https://github.com/srmainwaring/steer_bot/tree/master
+[submodule "steer_drive_ros"]
+	path = steer_drive_ros
+	url = https://github.com/tsedl/steer_drive_ros

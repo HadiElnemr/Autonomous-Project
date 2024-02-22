@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="model" default="$(find steer_bot_description)/urdf/steer_bot.urdf.xacro"/>
+    <!-- Load the robot description -->
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+    <arg name="namespace" default="/" />
+    
+    <!-- Gazebo  -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <!-- <arg name="world_name" default="$(arg world_name)"/> -->
+        <arg name="world_name" default="$(find Autonomous_Systems_Project_Simulation_Package_Team_18)/worlds/Intersection_Track.world"/>
+    </include>
+
+    <!-- Load ros_controllers configuration parameters -->
+        <rosparam file="$(find steer_bot_control)/config/ctrl_ackermann_steering_controller.yaml" command="load" ns="$(arg namespace)" />
+        <rosparam file="$(find steer_bot_control)/config/ctrl_gains.yaml" command="load" ns="$(arg namespace)" />
+        <rosparam file="$(find steer_bot_control)/config/ctrl_joint_state_publisher.yaml" command="load" ns="$(arg namespace)" />
+        <rosparam file="$(find steer_bot_control)/config/ctrl_steer_bot_hardware_gazebo.yaml" command="load" ns="$(arg namespace)" />
+
+        <!-- Spawn the controllers -->
+        <node pkg="controller_manager" type="spawner" name="controller_spawner" ns="$(arg namespace)"
+            args="joint_state_publisher ackermann_steering_controller"
+             respawn="false" />
+        
+        <!-- Launch  the robot state publisher -->
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+            <param name="publish_frequency" value="50.0"/>
+        </node>
+
+    <!-- Robot 1 -->
+    <group ns="/steer_bot">
+        <include file="$(find Autonomous_Systems_Project_Simulation_Package_Team_18)/launch/test_1.launch">
+            <!-- <arg name="namespace" value="/steerbot1" />  -->
+            <!-- <arg name="robot_name" value="Robot1"/> -->
+            <arg name="namespace" value="/steer_bot1" />
+            <arg name="id" value="1"/>
+            <arg name="x" value="-10.0"/>
+            <arg name="y" value="0.0"/>
+            <arg name="yaw" value="0.0"/>
+        </include>
+    </group>
+
+    <!-- Robot 2 -->
+    <group ns="/steer_bot">
+        <include file="$(find Autonomous_Systems_Project_Simulation_Package_Team_18)/launch/test_1.launch">
+            <!-- <arg name="namespace" value="/steerbot2" />  -->
+            <!-- <arg name="robot_name" value="Robot2"/> -->
+            <arg name="namespace" value="/steer_bot2" />
+            <arg name="id" value="2"/>
+            <arg name="x" value="0.0"/>
+            <arg name="y" value="-10.0"/>
+            <arg name="yaw" value="1.57"/>
+        </include>
+    </group>
+
+</launch>

@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="model" default="$(find steer_bot_description)/urdf/steer_bot.urdf.xacro"/>
+    <arg name="namespace" default="/steer_bot" />
+    <arg name="world_name" default="worlds/empty_world"/>
+    <arg name="cmd_timeout" default="0.5"/>
+    <arg name="x1" default="-10.0"/>
+    <arg name="y1" default="0.0"/>
+    <arg name="z1" default="1.0" />
+    <arg name="roll1" default="0.0"/>
+    <arg name="pitch1" default="0.0"/>
+    <arg name="yaw1" default="0.0"/>
+
+    <arg name="x2" default="0.0"/>
+    <arg name="y2" default="-10.0"/>
+    <arg name="z2" default="1.0" />
+    <arg name="roll2" default="0.0"/>
+    <arg name="pitch2" default="0.0"/>
+    <arg name="yaw2" default="1.57"/>
+
+    <!-- Gazebo  -->
+    <!-- <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" default="$(find Autonomous_Systems_Project_Simulation_Package_Team_18)/worlds/Intersection_Track.world"/>
+    </include> -->
+
+    <group ns="$(arg namespace)">
+
+        <!-- Load the robot description -->
+        <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+
+        <!-- Load ros_controllers configuration parameters -->
+        <rosparam file="$(find steer_bot_control)/config/ctrl_ackermann_steering_controller.yaml" command="load" ns="$(arg namespace)1" />
+        <rosparam file="$(find steer_bot_control)/config/ctrl_gains.yaml" command="load" ns="$(arg namespace)1" />
+        <rosparam file="$(find steer_bot_control)/config/ctrl_joint_state_publisher.yaml" command="load" ns="$(arg namespace)1" />
+        <rosparam file="$(find steer_bot_control)/config/ctrl_steer_bot_hardware_gazebo.yaml" command="load" ns="$(arg namespace)1" />
+
+        <!-- Spawn the controllers -->
+        <node pkg="controller_manager" type="spawner" name="controller_spawner" ns="$(arg namespace)1"
+            args="joint_state_publisher ackermann_steering_controller"
+             respawn="false" />
+        
+        <!-- Launch  the robot state publisher -->
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" ns="$(arg namespace)1">
+            <param name="publish_frequency" value="50.0"/>
+        </node>
+
+        <!-- Spawn robot in Gazebo -->
+  
+        <node name="spawn_vehicle" pkg="gazebo_ros" type="spawn_model" ns="$(arg namespace)1"
+            args="-urdf -param robot_description -model steer_bot1
+                -gazebo_namespace /gazebo
+                -x $(arg x1) -y $(arg y1) -z $(arg z1)
+                -R $(arg roll1) -P $(arg pitch1) -Y $(arg yaw1)"
+            respawn="false" output="screen" />
+
+    </group>
+
+    <group ns="$(arg namespace)">
+       <node pkg="Autonomous_Systems_Project_Simulation_Package_Team_18" name="Control_Module_Lateral_Motion" type="Control_Module_Lateral_Motion.py" output="screen" ns="$(arg namespace)1">
+          <param name="Wheel_Base" value="0.38"/> <!--Real_Lane_Width = 2.7 Real_wheelbase = 2.652 steer_Bot_wheelbase = 0.38-->
+          <param name="Lateral_Controller" value="Pure_Pursuit"/> <!-- Pure_Pursuit or Stanley -->
+          <!-- <remap from="/gazebo/model_states" to="$(arg namespace)/gazebo/model_states"/> -->
+          <remap from="/Control_Action_Steering" to="$(arg namespace)1/Control_Action_Steering"/>
+          <remap from="/Longitudinal_Driving_Velocity" to="$(arg namespace)1/Longitudinal_Driving_Velocity"/>
+          <remap from="/Lateral_Distance" to="$(arg namespace)1/Lateral_Distance"/>
+       </node>
+       
+       <node pkg="Autonomous_Systems_Project_Simulation_Package_Team_18" name="Control_Module_Longitudinal_Motion" type="Control_Module_Longitudinal_Motion.py" output="screen" ns="$(arg namespace)1">
+          <param name="Wheel_Base" value="0.38"/> 
+          <!-- <remap from="/gazebo/model_states" to="$(arg namespace)/gazebo/model_states"/> -->
+          <remap from="/Control_Action_Driving_Velocity" to="$(arg namespace)1/Control_Action_Driving_Velocity"/>
+          <remap from="/Longitudinal_Driving_Velocity" to="$(arg namespace)1/Longitudinal_Driving_Velocity"/>
+          <remap from="/Lateral_Distance" to="$(arg namespace)1/Lateral_Distance"/>
+       </node>
+       
+       <node pkg="Autonomous_Systems_Project_Simulation_Package_Team_18" name="Steer_Bot_Control_Module" type="Steer_Bot_Control_Module.py" output="screen" ns="$(arg namespace)1">
+          <remap from="/Control_Module_Output" to="$(arg namespace)1/ackermann_steering_controller/cmd_vel"/>
+          <remap from="/Control_Action_Steering" to="$(arg namespace)1/Control_Action_Steering"/>
+          <remap from="/Control_Action_Driving_Velocity" to="$(arg namespace)1/Control_Action_Driving_Velocity"/>
+       </node>
+       
+       <node pkg="Autonomous_Systems_Project_Simulation_Package_Team_18" name="Planning_Module1" type="Autonomous_Systems_MS_4_Planning_Team_18.py" output="screen" ns="$(arg namespace)1">
+          <remap from="/Longitudinal_Driving_Velocity" to="$(arg namespace)1/Longitudinal_Driving_Velocity"/>
+          <remap from="/Lateral_Distance" to="$(arg namespace)1/Lateral_Distance"/>
+          <!-- <remap from="/gazebo/model_states" to="$(arg namespace)/gazebo/model_states"/> -->
+       </node>
+       
+    </group>
+
+    <group ns="$(arg namespace)">
+
+        <!-- Load the robot description -->
+        <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+
+        <!-- Load ros_controllers configuration parameters -->
+        <rosparam file="$(find steer_bot_control)/config/ctrl_ackermann_steering_controller.yaml" command="load" ns="$(arg namespace)2" />
+        <rosparam file="$(find steer_bot_control)/config/ctrl_gains.yaml" command="load" ns="$(arg namespace)2" />
+        <rosparam file="$(find steer_bot_control)/config/ctrl_joint_state_publisher.yaml" command="load" ns="$(arg namespace)2" />
+        <rosparam file="$(find steer_bot_control)/config/ctrl_steer_bot_hardware_gazebo.yaml" command="load" ns="$(arg namespace)2" />
+
+        <!-- Spawn the controllers -->
+        <node pkg="controller_manager" type="spawner" name="controller_spawner" ns="$(arg namespace)2"
+            args="joint_state_publisher ackermann_steering_controller"
+             respawn="false" />
+        
+        <!-- Launch  the robot state publisher -->
+        <node name="robot_state_publisher2" pkg="robot_state_publisher" type="robot_state_publisher">
+            <param name="publish_frequency" value="50.0"/>
+        </node>
+
+        <!-- Spawn robot in Gazebo -->
+        
+        <node name="spawn_vehicle2" pkg="gazebo_ros" type="spawn_model"
+            args="-urdf -param robot_description -model steer_bot2
+                -gazebo_namespace /gazebo
+                -x $(arg x2) -y $(arg y2) -z $(arg z2)
+                -R $(arg roll2) -P $(arg pitch2) -Y $(arg yaw2)"
+            respawn="false" output="screen" />
+
+    </group>
+
+    <group ns="$(arg namespace)">
+       <node pkg="Autonomous_Systems_Project_Simulation_Package_Team_18" name="Control_Module_Lateral_Motion2" type="Control_Module_Lateral_Motion.py" output="screen">
+          <param name="Wheel_Base" value="0.38"/> <!--Real_Lane_Width = 2.7 Real_wheelbase = 2.652 steer_Bot_wheelbase = 0.38-->
+          <param name="Lateral_Controller" value="Pure_Pursuit"/> <!-- Pure_Pursuit or Stanley -->
+          <!-- <remap from="/gazebo/model_states" to="$(arg namespace)/gazebo/model_states"/> -->
+          <remap from="/Control_Action_Steering" to="$(arg namespace)2/Control_Action_Steering"/>
+          <remap from="/Longitudinal_Driving_Velocity" to="$(arg namespace)2/Longitudinal_Driving_Velocity"/>
+          <remap from="/Lateral_Distance" to="$(arg namespace)2/Lateral_Distance"/>
+       </node>
+       
+       <node pkg="Autonomous_Systems_Project_Simulation_Package_Team_18" name="Control_Module_Longitudinal_Motion2" type="Control_Module_Longitudinal_Motion.py" output="screen">
+          <param name="Wheel_Base" value="0.38"/> 
+          <!-- <remap from="/gazebo/model_states" to="$(arg namespace)/gazebo/model_states"/> -->
+          <remap from="/Control_Action_Driving_Velocity" to="$(arg namespace)2/Control_Action_Driving_Velocity"/>
+          <remap from="/Longitudinal_Driving_Velocity" to="$(arg namespace)2/Longitudinal_Driving_Velocity"/>
+          <remap from="/Lateral_Distance" to="$(arg namespace)2/Lateral_Distance"/>
+       </node>
+       
+       <node pkg="Autonomous_Systems_Project_Simulation_Package_Team_18" name="Steer_Bot_Control_Module2" type="Steer_Bot_Control_Module.py" output="screen">
+          <remap from="/Control_Module_Output" to="$(arg namespace)2/ackermann_steering_controller/cmd_vel"/>
+          <remap from="/Control_Action_Steering" to="$(arg namespace)2/Control_Action_Steering"/>
+          <remap from="/Control_Action_Driving_Velocity" to="$(arg namespace)2/Control_Action_Driving_Velocity"/>
+       </node>
+       
+       <node pkg="Autonomous_Systems_Project_Simulation_Package_Team_18" name="Planning_Module2" type="Autonomous_Systems_MS_4_Planning_Team_18.py" output="screen">
+          <remap from="/Longitudinal_Driving_Velocity" to="$(arg namespace)2/Longitudinal_Driving_Velocity"/>
+          <remap from="/Lateral_Distance" to="$(arg namespace)2/Lateral_Distance"/>
+          <!-- <remap from="/gazebo/model_states" to="$(arg namespace)/gazebo/model_states"/> -->
+       </node>
+       
+    </group>
+
+    <!-- <node pkg="rqt_graph" name="rqt_graph" type="rqt_graph" /> -->
+
+</launch>
